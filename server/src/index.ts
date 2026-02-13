@@ -35,10 +35,16 @@ import { getBlockchainStatus } from './blockchain/erc8004';
 // ═══════════════════════════════════════════════════════
 
 const app = express();
-const server = http.createServer(app);
+const isVercel = !!process.env.VERCEL;
 
-// WebSocket for real-time updates
-const wss = new WebSocketServer({ server, path: '/ws' });
+// HTTP server + WebSocket only for non-serverless environments
+let server: http.Server | undefined;
+let wss: WebSocketServer | undefined;
+
+if (!isVercel) {
+  server = http.createServer(app);
+  wss = new WebSocketServer({ server, path: '/ws' });
+}
 
 // Middleware
 app.use(helmet({ contentSecurityPolicy: false }));
@@ -176,7 +182,9 @@ setupX402(app).then(() => {
 //              A2A PROTOCOL ROUTES
 // ═══════════════════════════════════════════════════════
 
-const baseUrl = `http://localhost:${config.port}`;
+const baseUrl = process.env.VERCEL_URL
+  ? `https://${process.env.VERCEL_URL}`
+  : `http://localhost:${config.port}`;
 seedDefaultAgents(baseUrl);
 
 const a2aRouter = createA2ARouter(baseUrl);
@@ -342,40 +350,42 @@ app.get('/health', (req, res) => {
 });
 
 // ═══════════════════════════════════════════════════════
-//              WEBSOCKET HANDLING
+//              WEBSOCKET HANDLING (non-serverless only)
 // ═══════════════════════════════════════════════════════
 
-wss.on('connection', (ws: WebSocket) => {
-  console.log('🔌 WebSocket client connected');
-  
-  // Send current state on connect
-  ws.send(JSON.stringify({
-    event: 'connected',
-    data: {
-      agents: agentDirectory.getAll().length,
-      sessions: sessionManager.getStats().completedSessions,
-    },
-  }));
+if (wss) {
+  wss.on('connection', (ws: WebSocket) => {
+    console.log('🔌 WebSocket client connected');
+    
+    ws.send(JSON.stringify({
+      event: 'connected',
+      data: {
+        agents: agentDirectory.getAll().length,
+        sessions: sessionManager.getStats().completedSessions,
+      },
+    }));
 
-  ws.on('close', () => {
-    console.log('🔌 WebSocket client disconnected');
+    ws.on('close', () => {
+      console.log('🔌 WebSocket client disconnected');
+    });
   });
-});
 
-// Broadcast events to all WebSocket clients
-onEvent((event, data) => {
-  const message = JSON.stringify({ event, data, timestamp: Date.now() });
-  wss.clients.forEach(client => {
-    if (client.readyState === WebSocket.OPEN) {
-      client.send(message);
-    }
+  // Broadcast events to all WebSocket clients
+  onEvent((event, data) => {
+    const message = JSON.stringify({ event, data, timestamp: Date.now() });
+    wss!.clients.forEach(client => {
+      if (client.readyState === WebSocket.OPEN) {
+        client.send(message);
+      }
+    });
   });
-});
+}
 
 // ═══════════════════════════════════════════════════════
 //              START SERVER
 // ═══════════════════════════════════════════════════════
 
+if (server) {
 server.listen(config.port, () => {
   console.log(`
 ╔══════════════════════════════════════════════════════════════════╗
@@ -422,5 +432,9 @@ server.listen(config.port, () => {
   // For hackathon live demo: start sessions manually via API or dashboard
   console.log('ℹ️  Auto-demo is OFF. Use POST /api/demo/start to enable periodic sessions.');
 });
+} else {
+  console.log('☁️  NEXUS running in Vercel serverless mode');
+}
 
 export { app, server };
+export default app;

@@ -10,6 +10,7 @@ Built for the **San Francisco Agentic Commerce x402 Hackathon** (Feb 2025)
 [![SKALE](https://img.shields.io/badge/SKALE-Gasless-purple)](https://skale.space/)
 [![Gemini](https://img.shields.io/badge/Gemini_2.0-Flash-orange?logo=google)](https://ai.google.dev/)
 [![MCP](https://img.shields.io/badge/MCP-Claude%20%2B%20Cursor-black)](https://modelcontextprotocol.io/)
+[![Demo](https://img.shields.io/badge/Demo-YouTube-red?logo=youtube)](https://youtu.be/bZ-eHNW8Zug)
 
 ---
 

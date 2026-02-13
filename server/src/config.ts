@@ -1,5 +1,9 @@
 import dotenv from 'dotenv';
-dotenv.config({ path: '../.env' });
+
+// In Vercel, env vars are injected directly — dotenv only needed for local dev
+if (!process.env.VERCEL) {
+  dotenv.config({ path: '../.env' });
+}
 
 export const config = {
   port: parseInt(process.env.PORT || '3001'),
