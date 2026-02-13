@@ -67,7 +67,7 @@ server.tool(
               erc8004Id: a.agentCard?.erc8004?.agentId,
             })),
             protocols: ['A2A (Google)', 'ERC-8004', 'x402'],
-            network: 'SKALE Nebula Testnet (gasless)',
+            network: 'SKALE BITE V2 Sandbox (gasless)',
           }, null, 2),
         }],
       };

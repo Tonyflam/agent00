@@ -1,7 +1,7 @@
 /**
  * NEXUS — ERC-8004 On-Chain Integration
  * 
- * Connects to SKALE Nebula Testnet and interacts with the deployed
+ * Connects to SKALE BITE V2 Sandbox and interacts with the deployed
  * ERC-8004 contracts for agent identity and reputation management.
  * 
  * When contracts are deployed, this module:
@@ -52,7 +52,7 @@ const IDENTITY_REGISTRY_ABI = [
 
 const REPUTATION_REGISTRY_ABI = [
   'function giveFeedback(uint256 agentId, uint256 value, uint256 decimals, string[] tags, string endpoint, string feedbackURI, bytes32 feedbackHash) returns (uint256)',
-  'function quickFeedback(uint256 agentId, uint256 rating, string tag) returns (uint256)',
+  'function quickFeedback(uint256 agentId, int128 value) external',
   'function getSummary(uint256 agentId) view returns (uint256 count, uint256 totalScore, uint256 averageScore)',
   'event FeedbackGiven(uint256 indexed feedbackId, address indexed from, uint256 indexed agentId, uint256 value)',
 ];
@@ -73,6 +73,26 @@ function getReputationRegistry(): ethers.Contract | null {
   return new ethers.Contract(config.reputationRegistryAddress, REPUTATION_REGISTRY_ABI, signerOrProvider);
 }
 
+// Nonce manager for sequential on-chain transactions
+let pendingNonce: number = -1;
+let nonceInitPromise: Promise<void> | null = null;
+
+async function getNextNonce(): Promise<number> {
+  const wallet = getSigner();
+  if (!wallet) throw new Error('No signer');
+  
+  // Initialize nonce once (thread-safe via single promise)
+  if (pendingNonce < 0) {
+    if (!nonceInitPromise) {
+      nonceInitPromise = (async () => {
+        pendingNonce = await wallet.getNonce('pending');
+      })();
+    }
+    await nonceInitPromise;
+  }
+  return pendingNonce++;
+}
+
 // ═══════════════════════════════════════════════════════
 //              IDENTITY OPERATIONS
 // ═══════════════════════════════════════════════════════
@@ -90,7 +110,8 @@ export async function registerAgentOnChain(
 
   if (registry) {
     try {
-      const tx = await registry.register(name, agentURI, capabilities, []);
+      const nonce = await getNextNonce();
+      const tx = await registry.register(name, agentURI, capabilities, [], { nonce });
       const receipt = await tx.wait();
       
       // Parse the AgentRegistered event to get the agentId
@@ -146,7 +167,8 @@ export async function submitReputationOnChain(
 
   if (registry) {
     try {
-      const tx = await registry.quickFeedback(agentId, Math.round(rating * 100), tag);
+      const nonce = await getNextNonce();
+      const tx = await registry.quickFeedback(agentId, Math.round(rating), { nonce });
       const receipt = await tx.wait();
       
       const event = receipt.logs.find((log: any) => {
@@ -205,6 +227,8 @@ export async function getBlockchainStatus(): Promise<{
   connected: boolean;
   chainId: number | null;
   blockNumber: number | null;
+  explorerUrl: string;
+  network: string;
   contracts: {
     identity: { deployed: boolean; address: string };
     reputation: { deployed: boolean; address: string };
@@ -220,6 +244,8 @@ export async function getBlockchainStatus(): Promise<{
       connected: true,
       chainId: Number(network.chainId),
       blockNumber,
+      explorerUrl: 'https://base-sepolia-testnet-explorer.skalenodes.com:10032',
+      network: 'SKALE BITE V2 Sandbox',
       contracts: {
         identity: {
           deployed: !!config.agentRegistryAddress,
@@ -240,6 +266,8 @@ export async function getBlockchainStatus(): Promise<{
       connected: false,
       chainId: null,
       blockNumber: null,
+      explorerUrl: 'https://base-sepolia-testnet-explorer.skalenodes.com:10032',
+      network: 'SKALE BITE V2 Sandbox',
       contracts: {
         identity: { deployed: false, address: 'unavailable' },
         reputation: { deployed: false, address: 'unavailable' },
@@ -279,10 +307,12 @@ export async function recordPaymentOnChain(paymentData: {
         timestamp: Date.now(),
       })));
 
+      const nonce = await getNextNonce();
       const tx = await wallet.sendTransaction({
         to: wallet.address, // self-transfer (0 value)
         value: 0,
         data: calldata,
+        nonce,
       });
 
       const receipt = await tx.wait();

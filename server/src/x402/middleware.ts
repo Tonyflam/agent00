@@ -96,7 +96,7 @@ export function getX402RouteConfig(payTo: string) {
       accepts: {
         scheme: 'exact' as const,
         price: '$0.01',
-        network: 'eip155:84532',   // Base Sepolia for hackathon demo
+        network: 'eip155:103698795',   // SKALE BITE V2 Sandbox
         payTo,
         maxTimeoutSeconds: 300,
       },
@@ -106,7 +106,7 @@ export function getX402RouteConfig(payTo: string) {
       accepts: {
         scheme: 'exact' as const,
         price: '$0.02',
-        network: 'eip155:84532',
+        network: 'eip155:103698795',
         payTo,
         maxTimeoutSeconds: 300,
       },
@@ -116,7 +116,7 @@ export function getX402RouteConfig(payTo: string) {
       accepts: {
         scheme: 'exact' as const,
         price: '$0.05',
-        network: 'eip155:84532',
+        network: 'eip155:103698795',
         payTo,
         maxTimeoutSeconds: 600,
       },
@@ -135,7 +135,7 @@ export function getX402RouteConfig(payTo: string) {
  * the x402 protocol shape without real on-chain verification.
  */
 export function x402FallbackMiddleware(payTo: string) {
-  const SKALE_NETWORK = 'eip155:974399131';
+  const SKALE_NETWORK = 'eip155:103698795';
 
   return async (req: Request, res: Response, next: NextFunction): Promise<void> => {
     // Only intercept premium routes

@@ -13,7 +13,7 @@
             "runs": 200
           },
           "viaIR": true,
-          "evmVersion": "paris",
+          "evmVersion": "istanbul",
           "outputSelection": {
             "*": {
               "*": [
@@ -54,7 +54,7 @@
             "runs": 200
           },
           "viaIR": true,
-          "evmVersion": "paris",
+          "evmVersion": "istanbul",
           "outputSelection": {
             "*": {
               "*": [
@@ -93,7 +93,7 @@
             "runs": 200
           },
           "viaIR": true,
-          "evmVersion": "paris",
+          "evmVersion": "istanbul",
           "outputSelection": {
             "*": {
               "*": [
@@ -130,7 +130,7 @@
             "runs": 200
           },
           "viaIR": true,
-          "evmVersion": "paris",
+          "evmVersion": "istanbul",
           "outputSelection": {
             "*": {
               "*": [
@@ -167,7 +167,7 @@
             "runs": 200
           },
           "viaIR": true,
-          "evmVersion": "paris",
+          "evmVersion": "istanbul",
           "outputSelection": {
             "*": {
               "*": [
@@ -204,7 +204,7 @@
             "runs": 200
           },
           "viaIR": true,
-          "evmVersion": "paris",
+          "evmVersion": "istanbul",
           "outputSelection": {
             "*": {
               "*": [
@@ -249,7 +249,7 @@
             "runs": 200
           },
           "viaIR": true,
-          "evmVersion": "paris",
+          "evmVersion": "istanbul",
           "outputSelection": {
             "*": {
               "*": [
@@ -290,7 +290,7 @@
             "runs": 200
           },
           "viaIR": true,
-          "evmVersion": "paris",
+          "evmVersion": "istanbul",
           "outputSelection": {
             "*": {
               "*": [
@@ -329,7 +329,7 @@
             "runs": 200
           },
           "viaIR": true,
-          "evmVersion": "paris",
+          "evmVersion": "istanbul",
           "outputSelection": {
             "*": {
               "*": [
@@ -368,7 +368,7 @@
             "runs": 200
           },
           "viaIR": true,
-          "evmVersion": "paris",
+          "evmVersion": "istanbul",
           "outputSelection": {
             "*": {
               "*": [
@@ -407,7 +407,7 @@
             "runs": 200
           },
           "viaIR": true,
-          "evmVersion": "paris",
+          "evmVersion": "istanbul",
           "outputSelection": {
             "*": {
               "*": [
@@ -446,7 +446,7 @@
             "runs": 200
           },
           "viaIR": true,
-          "evmVersion": "paris",
+          "evmVersion": "istanbul",
           "outputSelection": {
             "*": {
               "*": [
@@ -486,7 +486,7 @@
             "runs": 200
           },
           "viaIR": true,
-          "evmVersion": "paris",
+          "evmVersion": "istanbul",
           "outputSelection": {
             "*": {
               "*": [
@@ -526,7 +526,7 @@
             "runs": 200
           },
           "viaIR": true,
-          "evmVersion": "paris",
+          "evmVersion": "istanbul",
           "outputSelection": {
             "*": {
               "*": [
@@ -565,7 +565,7 @@
             "runs": 200
           },
           "viaIR": true,
-          "evmVersion": "paris",
+          "evmVersion": "istanbul",
           "outputSelection": {
             "*": {
               "*": [
@@ -602,7 +602,7 @@
             "runs": 200
           },
           "viaIR": true,
-          "evmVersion": "paris",
+          "evmVersion": "istanbul",
           "outputSelection": {
             "*": {
               "*": [
@@ -639,7 +639,7 @@
             "runs": 200
           },
           "viaIR": true,
-          "evmVersion": "paris",
+          "evmVersion": "istanbul",
           "outputSelection": {
             "*": {
               "*": [
@@ -676,7 +676,7 @@
             "runs": 200
           },
           "viaIR": true,
-          "evmVersion": "paris",
+          "evmVersion": "istanbul",
           "outputSelection": {
             "*": {
               "*": [
@@ -713,7 +713,7 @@
             "runs": 200
           },
           "viaIR": true,
-          "evmVersion": "paris",
+          "evmVersion": "istanbul",
           "outputSelection": {
             "*": {
               "*": [
@@ -750,7 +750,7 @@
             "runs": 200
           },
           "viaIR": true,
-          "evmVersion": "paris",
+          "evmVersion": "istanbul",
           "outputSelection": {
             "*": {
               "*": [
@@ -790,7 +790,7 @@
             "runs": 200
           },
           "viaIR": true,
-          "evmVersion": "paris",
+          "evmVersion": "istanbul",
           "outputSelection": {
             "*": {
               "*": [
@@ -827,7 +827,7 @@
             "runs": 200
           },
           "viaIR": true,
-          "evmVersion": "paris",
+          "evmVersion": "istanbul",
           "outputSelection": {
             "*": {
               "*": [
@@ -870,7 +870,7 @@
             "runs": 200
           },
           "viaIR": true,
-          "evmVersion": "paris",
+          "evmVersion": "istanbul",
           "outputSelection": {
             "*": {
               "*": [
@@ -910,7 +910,7 @@
             "runs": 200
           },
           "viaIR": true,
-          "evmVersion": "paris",
+          "evmVersion": "istanbul",
           "outputSelection": {
             "*": {
               "*": [

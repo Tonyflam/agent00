@@ -248,7 +248,7 @@ export function seedDefaultAgents(baseUrl: string): void {
         defaultInputModes: ['text', 'application/json'],
         defaultOutputModes: ['text', 'application/json'],
         provider: { organization: 'NEXUS Commerce', url: baseUrl },
-        x402Support: { enabled: true, network: 'eip155:974399131', payTo: payToAddress },
+        x402Support: { enabled: true, network: 'eip155:103698795', payTo: payToAddress },
       },
       reputation: { score: 50, totalJobs: 0, successRate: 1.0 },
       status: 'active',
@@ -284,7 +284,7 @@ export function seedDefaultAgents(baseUrl: string): void {
         defaultInputModes: ['text'],
         defaultOutputModes: ['text', 'text/markdown'],
         provider: { organization: 'NEXUS Commerce', url: baseUrl },
-        x402Support: { enabled: true, network: 'eip155:974399131', payTo: payToAddress },
+        x402Support: { enabled: true, network: 'eip155:103698795', payTo: payToAddress },
       },
       reputation: { score: 50, totalJobs: 0, successRate: 1.0 },
       status: 'active',
@@ -320,7 +320,7 @@ export function seedDefaultAgents(baseUrl: string): void {
         defaultInputModes: ['text', 'application/json'],
         defaultOutputModes: ['text', 'text/markdown', 'application/json'],
         provider: { organization: 'NEXUS Commerce', url: baseUrl },
-        x402Support: { enabled: true, network: 'eip155:974399131', payTo: payToAddress },
+        x402Support: { enabled: true, network: 'eip155:103698795', payTo: payToAddress },
       },
       reputation: { score: 50, totalJobs: 0, successRate: 1.0 },
       status: 'active',
@@ -356,7 +356,7 @@ export function seedDefaultAgents(baseUrl: string): void {
         defaultInputModes: ['text'],
         defaultOutputModes: ['text', 'application/json'],
         provider: { organization: 'NEXUS Commerce', url: baseUrl },
-        x402Support: { enabled: true, network: 'eip155:974399131', payTo: payToAddress },
+        x402Support: { enabled: true, network: 'eip155:103698795', payTo: payToAddress },
       },
       reputation: { score: 50, totalJobs: 0, successRate: 1.0 },
       status: 'active',
@@ -392,7 +392,7 @@ export function seedDefaultAgents(baseUrl: string): void {
         defaultInputModes: ['text'],
         defaultOutputModes: ['text'],
         provider: { organization: 'NEXUS Commerce', url: baseUrl },
-        x402Support: { enabled: true, network: 'eip155:974399131', payTo: payToAddress },
+        x402Support: { enabled: true, network: 'eip155:103698795', payTo: payToAddress },
       },
       reputation: { score: 50, totalJobs: 0, successRate: 1.0 },
       status: 'active',
@@ -415,8 +415,8 @@ export function seedDefaultAgents(baseUrl: string): void {
       if (registered) {
         registered.agentCard.erc8004 = {
           agentId: result.agentId,
-          registry: result.onChain ? (registered.agentCard.erc8004?.registry || '') : 'demo',
-          chainId: 974399131,
+          registry: result.onChain ? (process.env.IDENTITY_REGISTRY_ADDRESS || '') : 'demo',
+          chainId: 103698795,
         };
         registered.erc8004Id = result.agentId;
       }
@@ -461,7 +461,7 @@ export function createA2ARouter(baseUrl: string): Router {
       defaultInputModes: ['text', 'application/json'],
       defaultOutputModes: ['text', 'application/json'],
       provider: { organization: 'NEXUS Protocol', url: baseUrl },
-      x402Support: { enabled: true, network: 'eip155:974399131', payTo: process.env.PAYMENT_WALLET_ADDRESS || '0x7b4bCB5EC56D2CB3f5E5D89C600F8e238FDC19A6' },
+      x402Support: { enabled: true, network: 'eip155:103698795', payTo: process.env.PAYMENT_WALLET_ADDRESS || '0x7b4bCB5EC56D2CB3f5E5D89C600F8e238FDC19A6' },
     };
     res.json(platformCard);
   });

@@ -423,7 +423,7 @@ function AgentsView({ agents }: { agents: DashboardData['agents'] }) {
                   <div className={`status-dot ${agent.status === 'active' ? 'status-active' : 'status-busy'}`} />
                 </div>
                 {agent.erc8004Id && (
-                  <span className="text-[10px] text-gray-500">ERC-8004 Agent #{agent.erc8004Id} · SKALE Nebula</span>
+                  <span className="text-[10px] text-gray-500">ERC-8004 Agent #{agent.erc8004Id} · SKALE BITE V2</span>
                 )}
               </div>
             </div>

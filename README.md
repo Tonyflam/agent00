@@ -54,7 +54,7 @@ All of this happens **autonomously** — no human in the loop.
 │  └───────────────────────┬───────────────────────────────────┘  │   │
 │                          │                                      │   │
 │  ┌───────────────────────▼──────────────────────────────────┐   │   │
-│  │              SKALE Nebula Testnet (Gasless)               │   │   │
+│  │              SKALE BITE V2 Sandbox (Gasless)               │   │   │
 │  │  ┌──────────────┐ ┌─────────────┐ ┌───────────────────┐  │   │   │
 │  │  │ Identity     │ │ Reputation  │ │ Escrow            │  │   │   │
 │  │  │ Registry     │ │ Registry    │ │ (Trustless)       │  │   │   │
@@ -77,9 +77,9 @@ All of this happens **autonomously** — no human in the loop.
 | Sponsor Technology | How NEXUS Uses It | Status |
 |---|---|---|
 | **x402 (Coinbase)** | Official `@x402/express` SDK — HTTP 402 payment-gated endpoints with facilitator verification and USDC settlement | ✅ Integrated |
-| **ERC-8004** | Full triple-registry: Identity (ERC-721 agent NFTs), Reputation (on-chain feedback), Escrow (trustless commerce) | ✅ 3 contracts compiled |
+| **ERC-8004** | Full triple-registry: Identity (ERC-721 agent NFTs), Reputation (on-chain feedback), Escrow (trustless commerce) | ✅ 3 contracts deployed |
 | **Google A2A** | Agent cards at `/.well-known/agent.json`, JSON-RPC 2.0 task lifecycle, capability discovery | ✅ Live |
-| **SKALE** | Gasless L1 blockchain (Nebula Testnet, Chain 974399131) — agents register and build reputation with zero gas | ✅ Connected |
+| **SKALE** | Gasless L1 blockchain (BITE V2 Sandbox, Chain 103698795) — agents register and build reputation with zero gas | ✅ Connected |
 | **Google Gemini** | Gemini 2.0 Flash powers multi-round AI negotiation and intelligent service execution | ✅ Active |
 | **MCP** | 8-tool MCP server for Claude Desktop, Cursor, and VS Code Copilot integration | ✅ 8 tools |
 
@@ -182,7 +182,7 @@ AI Engine:    Google Gemini 2.0 Flash
 Payments:     x402 Protocol (official @x402/express + @x402/core + @x402/evm)
 Discovery:    Google A2A Protocol (Agent Cards + JSON-RPC 2.0)
 Identity:     ERC-8004 (Identity + Reputation + Escrow)
-Network:      SKALE Nebula Testnet (Chain 974399131, gasless)
+Network:      SKALE BITE V2 Sandbox (Chain 103698795, gasless)
 MCP:          @modelcontextprotocol/sdk (8 tools)
 Validation:   Zod schema validation
 ```
@@ -199,7 +199,7 @@ nexus402/
 │   │   ├── ReputationRegistry.sol      # ERC-8004 Reputation (on-chain feedback)
 │   │   └── AgentEscrow.sol             # Trustless Commerce Escrow (ERC-20)
 │   ├── scripts/deploy.ts              # SKALE deployment script
-│   └── hardhat.config.ts              # SKALE Nebula + Europa networks
+│   └── hardhat.config.ts              # SKALE BITE V2 Sandbox network
 │
 ├── server/                             # Backend Server (TypeScript)
 │   └── src/
@@ -271,8 +271,8 @@ GEMINI_API_KEY=your_gemini_api_key
 # Server
 PORT=3001
 
-# Blockchain (SKALE Nebula Testnet — gasless)
-SKALE_RPC_URL=https://testnet.skalenodes.com/v1/giant-half-dual-testnet
+# Blockchain (SKALE BITE V2 Sandbox — gasless)
+SKALE_RPC_URL=https://base-sepolia-testnet.skalenodes.com/v1/bite-v2-sandbox
 DEPLOYER_PRIVATE_KEY=your_private_key
 
 # Contract addresses (after deployment)
@@ -280,9 +280,10 @@ IDENTITY_REGISTRY_ADDRESS=0x...
 REPUTATION_REGISTRY_ADDRESS=0x...
 ESCROW_ADDRESS=0x...
 
-# x402 (Official Coinbase Facilitator)
-FACILITATOR_URL=https://facilitator.x402.org
+# x402 (Kobaru Facilitator for BITE V2)
+FACILITATOR_URL=https://gateway.kobaru.io
 PAYMENT_WALLET_ADDRESS=0x...
+USDC_ADDRESS=0xc4083B1E81ceb461Ccef3FDa8A9F24F0d764B6D8
 ```
 
 ### Deploy Contracts to SKALE
@@ -293,7 +294,7 @@ cd contracts
 # Compile (3 contracts → 24 artifacts)
 npx hardhat compile
 
-# Deploy to SKALE Nebula Testnet
+# Deploy to SKALE BITE V2 Sandbox
 npx hardhat run scripts/deploy.ts --network skale-testnet
 ```
 
@@ -354,8 +355,18 @@ import { HTTPFacilitatorClient } from '@x402/core/server';
 import { ExactEvmScheme } from '@x402/evm/exact/server';
 
 const facilitatorClient = new HTTPFacilitatorClient({ url: facilitatorUrl });
+const evmScheme = new ExactEvmScheme();
+// Register custom USDC for BITE V2 Sandbox
+evmScheme.registerMoneyParser(async (amount, network) => {
+  if (network === 'eip155:103698795') {
+    return { amount: Math.round(amount * 1e6).toString(),
+      asset: '0xc4083B1E81ceb461Ccef3FDa8A9F24F0d764B6D8',
+      extra: { name: 'USDC', version: '2' } };
+  }
+  return null;
+});
 const resourceServer = new x402ResourceServer(facilitatorClient)
-  .register('eip155:84532', new ExactEvmScheme());
+  .register('eip155:103698795', evmScheme);
 
 app.use(paymentMiddleware(routeConfig, resourceServer));
 ```
@@ -370,7 +381,7 @@ Agent A (Client)                    NEXUS Server                      Agent B (S
        │  402 Payment Required          │                                    │
        │  X-PAYMENT: {                  │                                    │
        │    scheme: "exact",            │                                    │
-       │    network: "eip155:84532",    │                                    │
+       │    network: "eip155:103698795",    │                                    │
        │    maxAmountRequired: "10000", │                                    │
        │    resource: "/analysis"       │                                    │
        │  }                             │                                    │
@@ -393,7 +404,7 @@ Real blockchain interaction via ethers.js on SKALE:
 // server/src/blockchain/erc8004.ts — Live SKALE interaction
 import { ethers } from 'ethers';
 
-// Connect to SKALE Nebula Testnet (gasless)
+// Connect to SKALE BITE V2 Sandbox (gasless)
 const provider = new ethers.JsonRpcProvider(config.skaleRpcUrl);
 const signer = new ethers.Wallet(config.deployerPrivateKey, provider);
 
@@ -403,7 +414,7 @@ const receipt = await tx.wait();
 // → Agent registered: ID #42 | tx: 0xabc...
 
 // Submit reputation after commerce session
-const tx = await reputationRegistry.quickFeedback(agentId, rating * 100, 'service-completed');
+const tx = await reputationRegistry.quickFeedback(agentId, rating * 100);
 // → Reputation feedback for agent #42: 95/100
 
 // Query reputation summary
@@ -425,7 +436,7 @@ $ curl http://localhost:3001/.well-known/agent.json | jq .
     { "id": "agent-discovery", "name": "Agent Discovery", "tags": ["discovery"] },
     { "id": "commerce-orchestration", "name": "Commerce Orchestration", "tags": ["commerce"] }
   ],
-  "x402Support": { "enabled": true, "network": "eip155:974399131" },
+  "x402Support": { "enabled": true, "network": "eip155:103698795" },
   "authentication": { "schemes": ["x402", "bearer", "none"] }
 }
 ```
@@ -435,10 +446,11 @@ $ curl http://localhost:3001/.well-known/agent.json | jq .
 Multi-round AI-powered price negotiation between agents:
 
 ```
-Round 1: Client offers $0.003 → Agent counters at $0.008  (Gemini reasoning)
-Round 2: Client offers $0.005 → Agent counters at $0.006  (convergence detected)
-Round 3: Client offers $0.0055 → Agent accepts ✓           (deal closed)
-Duration: 2.3 seconds | Savings: 45% from initial ask
+Round 1: Client offers $0.004   (reason: "Starting at 80% of list price")
+         Agent counters at $0.005 (reason: "Countering at 25% premium")
+Round 2: Client offers $0.0044  (reason: "Increasing offer by 10%, gap is $0.0006")
+         Agent accepts $0.0044 ✓  (reason: "Price gap < $0.001 — closing deal")
+Duration: 0.4 seconds | On-chain payment | Explorer link included
 ```
 
 ---
@@ -450,7 +462,7 @@ Duration: 2.3 seconds | Savings: 45% from initial ask
 | **x402 (Coinbase)** | Official `@x402/express` SDK with facilitator verification + intelligent fallback for demo |
 | **ERC-8004** | 3 Solidity contracts (Identity ERC-721 + Reputation + Escrow) deployed to SKALE |
 | **Google A2A** | Full protocol — agent cards, directory, capability discovery, JSON-RPC 2.0 |
-| **SKALE** | Gasless L1 on Nebula Testnet — real ethers.js provider/signer connected |
+| **SKALE** | Gasless L1 on BITE V2 Sandbox — real ethers.js provider/signer connected |
 | **Gemini** | 2.0 Flash powers AI negotiation engine + service execution |
 | **Coinbase CDP** | USDC payment settlement, wallet integration, x402 SDK |
 | **MCP** | 8-tool MCP server for Claude Desktop, Cursor, and VS Code |
@@ -461,16 +473,26 @@ Duration: 2.3 seconds | Savings: 45% from initial ask
 
 Transparency about what's live vs. demo mode:
 
-| Component | Production Mode | Demo Mode (Default) |
+| Component | Status | Details |
 |---|---|---|
-| **x402 Middleware** | Official `@x402/express` with facilitator | Fallback middleware (x402 headers, logged payments) |
-| **Agent Registration** | Real ERC-8004 on-chain via SKALE | Demo IDs via deterministic hash |
-| **Reputation** | On-chain `quickFeedback()` to ReputationRegistry | Logged locally, printed to console |
-| **AI Negotiation** | Gemini 2.0 Flash multi-round | Intelligent fallback responses |
-| **A2A Protocol** | ✅ Always live | ✅ Always live |
-| **SKALE Connection** | ✅ Always live (block # verified) | ✅ Always live |
-| **WebSocket Events** | ✅ Always live | ✅ Always live |
-| **MCP Server** | ✅ Always live | ✅ Always live |
+| **x402 Middleware** | ✅ Production | Official `@x402/express` + Kobaru facilitator on BITE V2 Sandbox |
+| **Agent Registration** | ✅ Production | Real ERC-8004 on-chain via SKALE (5 agents registered) |
+| **Reputation** | ✅ Production | On-chain `quickFeedback()` after every commerce session |
+| **AI Negotiation** | ✅ Production | Gemini 2.0 Flash multi-round with reasoning (fallback if rate-limited) |
+| **On-chain Payments** | ✅ Production | Real txHash on SKALE BITE V2, verifiable on explorer |
+| **A2A Protocol** | ✅ Always live | Agent cards at `/.well-known/agent.json` |
+| **SKALE Connection** | ✅ Always live | Block # verified, gasless transactions |
+| **WebSocket Events** | ✅ Always live | Real-time session and negotiation streaming |
+| **MCP Server** | ✅ Always live | 8 tools for Claude Desktop, Cursor, VS Code |
+
+### Deployed Contract Addresses (SKALE BITE V2 Sandbox)
+
+| Contract | Address | Explorer |
+|---|---|---|
+| AgentIdentityRegistry | `0xa099305673B0cd439dF3124f2F4f18E040e32287` | [View](https://base-sepolia-testnet-explorer.skalenodes.com:10032/address/0xa099305673B0cd439dF3124f2F4f18E040e32287) |
+| ReputationRegistry | `0xbc2624706DB3Ee65B0265dd163D96faaaeC47293` | [View](https://base-sepolia-testnet-explorer.skalenodes.com:10032/address/0xbc2624706DB3Ee65B0265dd163D96faaaeC47293) |
+| AgentEscrow | `0x44D59fb4357Dd91Fd22FdFA13d7871A24E64931D` | [View](https://base-sepolia-testnet-explorer.skalenodes.com:10032/address/0x44D59fb4357Dd91Fd22FdFA13d7871A24E64931D) |
+| USDC Token | `0xc4083B1E81ceb461Ccef3FDa8A9F24F0d764B6D8` | [View](https://base-sepolia-testnet-explorer.skalenodes.com:10032/address/0xc4083B1E81ceb461Ccef3FDa8A9F24F0d764B6D8) |
 
 ---
 

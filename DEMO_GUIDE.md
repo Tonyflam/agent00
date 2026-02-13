@@ -28,12 +28,12 @@ This powers the **real AI negotiation** between agents — Gemini 2.0 Flash gene
 
 sFUEL is the gas token on SKALE — it's **completely free** but required to send transactions.
 
-1. Go to **https://sfuelstation.com**
+1. Go to **https://www.sfuelstation.com**
 2. Connect or paste this wallet address:
    ```
    0x7b4bCB5EC56D2CB3f5E5D89C600F8e238FDC19A6
    ```
-3. Select **"SKALE Nebula Testnet"** (chain ID: `974399131`)
+3. Select **"BITE V2 Sandbox"** (chain ID: `103698795`)
 4. Click **"Claim sFUEL"**
 5. Wait ~10 seconds for confirmation
 
@@ -42,7 +42,7 @@ sFUEL is the gas token on SKALE — it's **completely free** but required to sen
 cd /workspaces/agent00 && node -e "
 const{ethers}=require('ethers');
 (async()=>{
-  const p=new ethers.JsonRpcProvider('https://testnet.skalenodes.com/v1/giant-half-dual-testnet');
+  const p=new ethers.JsonRpcProvider('https://base-sepolia-testnet.skalenodes.com/v1/bite-v2-sandbox');
   const b=await p.getBalance('0x7b4bCB5EC56D2CB3f5E5D89C600F8e238FDC19A6');
   console.log('sFUEL Balance:', ethers.formatEther(b));
 })();
@@ -86,9 +86,11 @@ Your `.env` should look like this:
 DEPLOYER_PRIVATE_KEY=0x9bc85469e268cd97e2e7ec9e3598e59eb52516c4b838fe030c8081ccd5662744
 GEMINI_API_KEY=AIzaSy...your_real_key
 PAYMENT_WALLET_ADDRESS=0x7b4bCB5EC56D2CB3f5E5D89C600F8e238FDC19A6
-IDENTITY_REGISTRY_ADDRESS=0x...from_deploy
-REPUTATION_REGISTRY_ADDRESS=0x...from_deploy
-ESCROW_ADDRESS=0x...from_deploy
+IDENTITY_REGISTRY_ADDRESS=0xa099305673B0cd439dF3124f2F4f18E040e32287
+REPUTATION_REGISTRY_ADDRESS=0xbc2624706DB3Ee65B0265dd163D96faaaeC47293
+ESCROW_ADDRESS=0x44D59fb4357Dd91Fd22FdFA13d7871A24E64931D
+USDC_ADDRESS=0xc4083B1E81ceb461Ccef3FDa8A9F24F0d764B6D8
+FACILITATOR_URL=https://gateway.kobaru.io
 ```
 
 ---
@@ -129,7 +131,7 @@ Open: **http://localhost:5173**
 
 The dashboard shows:
 - 5 registered agents (DataSense, ContentForge, CodeAudit, MarketOracle, LinguaAgent)
-- Live blockchain status (SKALE Nebula Testnet connected)
+- Live blockchain status (SKALE BITE V2 Sandbox connected)
 - 0 sessions / 0 transactions (clean slate — nothing is faked)
 
 ---
@@ -187,8 +189,10 @@ curl -s http://localhost:3001/api/payments | python3 -m json.tool
 
 The `txHash` from the response can be verified at:
 ```
-https://giant-half-dual-testnet.explorer.testnet.skalenodes.com/tx/YOUR_TX_HASH
+https://base-sepolia-testnet-explorer.skalenodes.com:10032/tx/YOUR_TX_HASH
 ```
+
+> **Pro tip:** Explorer URL must include port `:10032` — this is the BITE V2 Sandbox explorer.
 
 **Tell the judges:** "Every payment creates a real on-chain transaction on SKALE. The txHash is verifiable on the block explorer. There is nothing simulated here."
 
@@ -227,7 +231,7 @@ curl -s http://localhost:3001/api/blockchain/status | python3 -m json.tool
 ```
 
 This shows:
-- SKALE Nebula Testnet connected ✅
+- SKALE BITE V2 Sandbox connected ✅
 - Current block number (live)
 - All 3 contracts deployed ✅
 
@@ -321,7 +325,7 @@ curl -s -X POST http://localhost:3001/api/demo/stop
 | Issue | Fix |
 |---|---|
 | Server shows "GEMINI_API_KEY not set" | Add your key to `.env` — get one free at https://aistudio.google.com/apikey |
-| On-chain payments show `0xff...ff` txHash | Wallet has no sFUEL — get some at https://sfuelstation.com |
+| On-chain payments show `0xff...ff` txHash | Wallet has no sFUEL — get some at https://www.sfuelstation.com for BITE V2 Sandbox |
 | "agent registration in demo mode" | Contracts not deployed — run `cd contracts && npx hardhat run scripts/deploy.ts --network skale-testnet` |
 | x402 middleware shows "facilitator unavailable" | Normal for local dev — the fallback x402 middleware activates automatically |
 | Dashboard shows 0 sessions | Sessions start clean — run a commerce session via the API or start auto-demo |
@@ -361,8 +365,8 @@ curl -s http://localhost:3001/api/payments | python3 -m json.tool
 # A2A agent card
 curl -s http://localhost:3001/.well-known/agent.json | python3 -m json.tool
 
-# SKALE block explorer (verify txHash)
-# https://giant-half-dual-testnet.explorer.testnet.skalenodes.com/tx/YOUR_TX_HASH
+# SKALE BITE V2 Sandbox block explorer (verify txHash — port 10032 is required)
+# https://base-sepolia-testnet-explorer.skalenodes.com:10032/tx/YOUR_TX_HASH
 ```
 
 ---

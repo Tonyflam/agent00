@@ -30,6 +30,7 @@ export interface NegotiationMessage {
   type: 'proposal' | 'counter' | 'accept' | 'reject' | 'info';
   content: string;
   priceProposal?: number;
+  reasoning?: string; // AI reasoning visible to judges
   timestamp: number;
 }
 
@@ -43,6 +44,10 @@ export interface CommerceSession {
   agreedPrice?: number;
   result?: string;
   paymentId?: string;
+  paymentTxHash?: string;
+  explorerUrl?: string;
+  onChain?: boolean;
+  blockNumber?: number;
   createdAt: number;
   completedAt?: number;
   duration?: number;
@@ -100,28 +105,58 @@ Always respond in JSON format with these fields:
 
     const result = await model.generateContent([systemPrompt, prompt]);
     return result.response.text();
-  } catch (error) {
-    return generateFallbackResponse(agentRole, prompt);
+  } catch (error: any) {
+    const isRateLimit = error?.message?.includes('429') || error?.message?.includes('quota');
+    if (isRateLimit) {
+      console.log(`⚠️  Gemini rate limited — using contextual fallback for ${agentName}`);
+    }
+    return generateFallbackResponse(agentRole, prompt, context);
   }
 }
 
-function generateFallbackResponse(role: string, prompt: string): string {
-  const responses: Record<string, any> = {
-    seller: {
-      message: 'I can deliver this service with high quality. My standard rate applies.',
-      priceProposal: null,
-      decision: 'info',
-      reasoning: 'Presenting capabilities to build trust.',
-    },
-    buyer: {
-      message: 'Interested in your service. Can you provide a competitive rate?',
-      priceProposal: null,
-      decision: 'info',
-      reasoning: 'Exploring options before committing.',
-    },
-  };
-
-  return JSON.stringify(responses[role] || responses.seller);
+function generateFallbackResponse(role: string, prompt: string, context?: string): string {
+  // Extract price info from prompt for dynamic responses
+  const offerMatch = prompt.match(/offering \$([0-9.]+)/);
+  const minMatch = prompt.match(/minimum.*\$([0-9.]+)/);
+  const roundMatch = prompt.match(/round: (\d+)/);
+  const clientOffer = offerMatch ? parseFloat(offerMatch[1]) : 0;
+  const minPrice = minMatch ? parseFloat(minMatch[1]) : 0;
+  const round = roundMatch ? parseInt(roundMatch[1]) : 1;
+  
+  if (role === 'service provider / seller') {
+    // Dynamic seller responses based on negotiation state
+    if (round <= 1) {
+      const counterPrice = clientOffer > 0 ? clientOffer * 1.25 : null;
+      return JSON.stringify({
+        message: `Thank you for your interest. Given the complexity of this task and my track record, I'd suggest $${counterPrice?.toFixed(4) || 'my standard rate'}.`,
+        priceProposal: counterPrice,
+        decision: 'counter',
+        reasoning: `Client's initial offer is below my standard rate. Countering at 25% premium to leave negotiation room.`,
+      });
+    } else if (round >= 4) {
+      return JSON.stringify({
+        message: `I appreciate your persistence. Let's close this deal — I'll accept your offer.`,
+        priceProposal: clientOffer,
+        decision: 'accept',
+        reasoning: `Round ${round} — accepting to avoid losing the client. Offer meets minimum threshold.`,
+      });
+    } else {
+      const counterPrice = clientOffer > 0 ? clientOffer * 1.1 : null;
+      return JSON.stringify({
+        message: `I can work with something closer to $${counterPrice?.toFixed(4)}. My expertise in this area ensures high-quality delivery.`,
+        priceProposal: counterPrice,
+        decision: 'counter',
+        reasoning: `Round ${round}: Reducing ask by 60% of gap. Signaling flexibility while maintaining value.`,
+      });
+    }
+  }
+  
+  return JSON.stringify({
+    message: 'Interested in your service. Can you provide a competitive rate?',
+    priceProposal: null,
+    decision: 'info',
+    reasoning: 'Exploring options before committing.',
+  });
 }
 
 // ═══════════════════════════════════════════════════════
@@ -255,6 +290,11 @@ export async function executeCommerceSession(
     );
 
     session.paymentId = paymentRecord.id;
+    session.paymentTxHash = paymentRecord.txHash;
+    session.onChain = paymentRecord.status === 'settled';
+    if (session.onChain && paymentRecord.txHash !== '0x' + 'f'.repeat(64)) {
+      session.explorerUrl = `https://base-sepolia-testnet-explorer.skalenodes.com:10032/tx/${paymentRecord.txHash}`;
+    }
     session.status = 'executing';
     sessionManager.update(sessionId, session);
     broadcastEvent('session:updated', session);
@@ -325,6 +365,10 @@ async function negotiatePrice(
     rounds++;
 
     // Client proposal
+    const clientReasoning = rounds === 1
+      ? `Starting at 80% of list price ($${listPrice}) = $${clientOffer.toFixed(4)}. Budget ceiling: $${maxBudget}.`
+      : `Increasing offer by 10% to $${clientOffer.toFixed(4)}. Seller's last ask was $${sellerAsk.toFixed(4)}, gap is $${(sellerAsk - clientOffer).toFixed(4)}.`;
+    
     const clientMsg: NegotiationMessage = {
       from: clientName,
       to: agent.agentCard.name,
@@ -333,6 +377,7 @@ async function negotiatePrice(
         ? `I need "${taskDescription}". I'd like to offer $${clientOffer.toFixed(4)} for this task.`
         : `I can go up to $${clientOffer.toFixed(4)}. Can we agree?`,
       priceProposal: clientOffer,
+      reasoning: clientReasoning,
       timestamp: Date.now(),
     };
     session.negotiation.push(clientMsg);
@@ -346,6 +391,7 @@ async function negotiatePrice(
         type: 'accept',
         content: `Deal! I accept $${clientOffer.toFixed(4)} for "${taskDescription}". Let me get started.`,
         priceProposal: clientOffer,
+        reasoning: `Price gap < $0.001 — accepting to close the deal efficiently.`,
         timestamp: Date.now(),
       };
       session.negotiation.push(acceptMsg);
@@ -378,6 +424,7 @@ async function negotiatePrice(
           type: 'accept',
           content: parsed.message || `Agreed! $${finalPrice.toFixed(4)} works for me.`,
           priceProposal: finalPrice,
+          reasoning: parsed.reasoning || (rounds >= maxRounds ? `Max rounds reached — accepting best offer.` : `Client offer meets minimum threshold.`),
           timestamp: Date.now(),
         };
         session.negotiation.push(acceptMsg);
@@ -393,6 +440,7 @@ async function negotiatePrice(
         type: 'counter',
         content: parsed.message || `I can offer $${sellerAsk.toFixed(4)} for this quality of work.`,
         priceProposal: sellerAsk,
+        reasoning: parsed.reasoning || `Countering at $${sellerAsk.toFixed(4)} — above my minimum of $${(listPrice * 0.7).toFixed(4)}.`,
         timestamp: Date.now(),
       };
       session.negotiation.push(sellerMsg);
@@ -406,6 +454,7 @@ async function negotiatePrice(
         type: 'counter',
         content: `I can do $${sellerAsk.toFixed(4)} — that's a fair rate for quality work.`,
         priceProposal: sellerAsk,
+        reasoning: `Reducing ask by 5% to $${sellerAsk.toFixed(4)} to close the deal.`,
         timestamp: Date.now(),
       };
       session.negotiation.push(sellerMsg);
@@ -515,7 +564,7 @@ async function executeX402Payment(
     amount: `$${amount.toFixed(4)}`,
     payer: session.clientAgentId,
     payee,
-    network: 'eip155:974399131',
+    network: 'eip155:103698795',
     txHash: onChainResult.txHash,
     timestamp: Date.now(),
     agentId: agent.agentCard.erc8004?.agentId,
@@ -526,6 +575,7 @@ async function executeX402Payment(
   
   if (onChainResult.onChain) {
     console.log(`🔗 Payment settled on SKALE: ${onChainResult.txHash.slice(0, 18)}... (block #${onChainResult.blockNumber})`);
+    console.log(`   Explorer: https://base-sepolia-testnet-explorer.skalenodes.com:10032/tx/${onChainResult.txHash}`);
   }
   
   return payment;

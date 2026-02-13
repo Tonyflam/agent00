@@ -76,8 +76,24 @@ async function setupX402(expressApp: ReturnType<typeof express>) {
     const facilitatorClient = new x402Core.HTTPFacilitatorClient({
       url: facilitatorUrl,
     });
+    
+    // Create EVM scheme and register BITE V2 Sandbox USDC
+    const evmScheme = new x402Evm.ExactEvmScheme();
+    evmScheme.registerMoneyParser(async (amount: number, network: string) => {
+      if (network === 'eip155:103698795') {
+        // SKALE BITE V2 Sandbox USDC (6 decimals)
+        const tokenAmount = Math.round(amount * 1e6).toString();
+        return {
+          amount: tokenAmount,
+          asset: '0xc4083B1E81ceb461Ccef3FDa8A9F24F0d764B6D8', // USDC on BITE V2
+          extra: { name: 'USDC', version: '2' },
+        };
+      }
+      return null; // fall through to default
+    });
+    
     const resourceServer = new x402Express.x402ResourceServer(facilitatorClient)
-      .register('eip155:84532', new x402Evm.ExactEvmScheme());
+      .register('eip155:103698795', evmScheme);
 
     const routeConfig = getX402RouteConfig(payTo);
     expressApp.use(x402Express.paymentMiddleware(routeConfig, resourceServer));
@@ -252,7 +268,7 @@ app.get('/api/dashboard', (req, res) => {
     recentSessions: commerceStats.sessions.slice(0, 10),
     recentPayments: paymentStats.recentTransactions.slice(0, 10),
     network: {
-      name: 'SKALE Nebula Testnet',
+      name: 'SKALE BITE V2 Sandbox',
       chainId: config.skaleChainId,
       rpcUrl: config.skaleRpcUrl,
       gasless: true,
@@ -312,7 +328,7 @@ app.get('/health', (req, res) => {
     version: '1.0.0',
     mode: productionReady ? 'production' : 'partial',
     protocols: ['x402', 'a2a', 'erc-8004', 'mcp'],
-    network: 'SKALE Nebula Testnet',
+    network: 'SKALE BITE V2 Sandbox',
     services: {
       geminiAI: config.geminiApiKey ? 'active' : 'fallback',
       skaleBlockchain: config.deployerPrivateKey ? 'active' : 'no-signer',
@@ -380,7 +396,7 @@ server.listen(config.port, () => {
 ║   📋 A2A Card:   http://localhost:${config.port}/.well-known/agent.json║
 ║   💳 x402:       Enabled (SKALE gasless)                         ║
 ║   🤖 Agents:     ${agentDirectory.getAll().length} registered                                  ║
-║   🔗 Network:    SKALE Nebula Testnet (Chain ${config.skaleChainId})   ║
+║   🔗 Network:    SKALE BITE V2 Sandbox (Chain ${config.skaleChainId})  ║
 ║                                                                  ║
 ║   Protocols: x402 · A2A · ERC-8004 · SKALE · Gemini AI          ║
 ║                                                                  ║
