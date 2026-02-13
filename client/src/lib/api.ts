@@ -1,4 +1,5 @@
-const API_BASE = '/api';
+const API_URL = import.meta.env.VITE_API_URL || '';
+const API_BASE = `${API_URL}/api`;
 
 export async function fetchDashboard() {
   const res = await fetch(`${API_BASE}/dashboard`);
@@ -6,7 +7,7 @@ export async function fetchDashboard() {
 }
 
 export async function fetchAgents(capability?: string) {
-  const url = capability ? `/agents?capability=${capability}` : '/agents';
+  const url = capability ? `${API_URL}/agents?capability=${capability}` : `${API_URL}/agents`;
   const res = await fetch(url);
   return res.json();
 }
@@ -45,7 +46,7 @@ export async function stopDemo() {
 }
 
 export async function discoverAgents(capability: string) {
-  const res = await fetch('/discover', {
+  const res = await fetch(`${API_URL}/discover`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ capability }),
@@ -59,8 +60,18 @@ export async function fetchBlockchainStatus(): Promise<BlockchainStatus> {
 }
 
 export function createWebSocket(): WebSocket {
-  const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
-  const wsUrl = `${protocol}//${window.location.host}/ws`;
+  const apiUrl = import.meta.env.VITE_API_URL || '';
+  let wsUrl: string;
+  if (apiUrl) {
+    // External API — derive WebSocket URL from it
+    const url = new URL(apiUrl);
+    const protocol = url.protocol === 'https:' ? 'wss:' : 'ws:';
+    wsUrl = `${protocol}//${url.host}/ws`;
+  } else {
+    // Same origin (dev proxy)
+    const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+    wsUrl = `${protocol}//${window.location.host}/ws`;
+  }
   return new WebSocket(wsUrl);
 }
 
