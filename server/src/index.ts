@@ -19,7 +19,7 @@ import { WebSocketServer, WebSocket } from 'ws';
 import http from 'http';
 
 import { config } from './config';
-import { paymentMiddleware, x402FallbackMiddleware, getX402RouteConfig, paymentLedger } from './x402/middleware';
+import { x402FallbackMiddleware, getX402RouteConfig, paymentLedger } from './x402/middleware';
 import { createA2ARouter, seedDefaultAgents, agentDirectory, taskManager } from './a2a/server';
 import {
   executeCommerceSession,

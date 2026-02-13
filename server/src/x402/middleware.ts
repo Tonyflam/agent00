@@ -15,9 +15,8 @@ import { Request, Response, NextFunction } from 'express';
  *    ledger for dashboard analytics and demo purposes.
  */
 
-// Re-export official x402 middleware for use in index.ts
-// @ts-ignore — @x402 uses package.json exports (requires moduleResolution: node16+)
-export { paymentMiddleware } from '@x402/express';
+// Note: @x402/express paymentMiddleware is loaded dynamically in index.ts
+// via setupX402() to avoid bundler issues with package.json exports fields.
 
 // ═══════════════════════════════════════════════════════
 //                   TYPES
