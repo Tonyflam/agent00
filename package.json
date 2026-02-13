@@ -1,0 +1,40 @@
+{
+  "name": "nexus402",
+  "version": "1.0.0",
+  "description": "NEXUS — The Autonomous Agent Commerce Protocol. Multi-agent commerce network with x402 payments, ERC-8004 identity, and Google A2A discovery on SKALE.",
+  "private": true,
+  "workspaces": [
+    "contracts",
+    "server",
+    "client"
+  ],
+  "scripts": {
+    "dev": "concurrently \"npm run dev:server\" \"npm run dev:client\"",
+    "dev:server": "cd server && npm run dev",
+    "dev:client": "cd client && npm run dev",
+    "build": "npm run build:contracts && npm run build:server && npm run build:client",
+    "build:contracts": "cd contracts && npx hardhat compile",
+    "build:server": "cd server && npm run build",
+    "build:client": "cd client && npm run build",
+    "demo": "cd server && npx ts-node src/demo.ts"
+  },
+  "keywords": [
+    "x402",
+    "erc-8004",
+    "a2a",
+    "skale",
+    "autonomous-agents",
+    "agentic-commerce",
+    "web3",
+    "ai-agents",
+    "google-gemini",
+    "coinbase"
+  ],
+  "license": "MIT",
+  "devDependencies": {
+    "concurrently": "^8.2.0"
+  },
+  "dependencies": {
+    "@skaleproject/pow-ethers": "^0.3.3"
+  }
+}

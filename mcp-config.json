@@ -1,0 +1,12 @@
+{
+  "mcpServers": {
+    "nexus-agent-commerce": {
+      "command": "npx",
+      "args": ["ts-node", "--esm", "server/src/mcp/server.ts"],
+      "cwd": ".",
+      "env": {
+        "NEXUS_API_URL": "http://localhost:3001"
+      }
+    }
+  }
+}
